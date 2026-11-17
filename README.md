@@ -8,12 +8,11 @@ cp .env.example .env   # Amp token and partner credentials
 npm start
 ```
 
-[`src/multitenant-agent.ts`](src/multitenant-agent.ts) runs these steps and logs each one:
+[`src/multitenant-agent.ts`](src/multitenant-agent.ts) contains the customer flow and cleanup. [`src/helpers.ts`](src/helpers.ts) handles JWT signing, Amp installation and execution, the prompt, and the local proxy. The example runs these steps and logs each one:
 
 1. Signs a partner token with your partner key.
-2. Removes any tenants a previous run left behind, so every run starts clean.
-3. Starts a local proxy on http://localhost:4100.
-4. For `customer-1` and `customer-2`, in parallel:
+2. Starts a local proxy on http://localhost:4100.
+3. For `customer-1` and `customer-2`, in parallel:
    1. Creates the customer's tenant and issues a tenant token for it.
    2. Stores the Amp token in the tenant's Vault.
    3. Creates a blueprint in the tenant: built-in image, the Amp token from the Vault, and a network policy that allows Amp and npm.
@@ -22,8 +21,8 @@ npm start
    6. Starts `amp --no-tui` as the `amp-runner` service and asks the agent to build `index.html`: a Namespace-styled page showing "Hello from <customer>", the tenant and Devbox IDs, and a "Destroy devbox and tenant" button. Prints the agent's thread link when it finishes.
    7. Serves the agent's page as the `web` service and exposes it on a devbox.so URL.
    8. Prints `http://localhost:4100/<customer>/`.
-5. Waits until "Destroy devbox and tenant" has been clicked on both pages. Each click removes that customer's tenant and its Devbox.
-6. Removes anything left and exits. It also cleans up on Ctrl+C or after 30 minutes without clicks.
+4. Waits until "Destroy devbox and tenant" has been clicked on both pages. Each click removes that customer's tenant and its Devbox.
+5. Removes any remaining tenants used by this run and exits. It also cleans up on Ctrl+C or after 30 minutes without clicks. It does not scan for or clean up tenants from previous runs.
 
 The devbox.so URLs need credentials for the customer's tenant: your own Namespace login belongs to your workspace, not to the tenants your platform creates. The local proxy fetches each page with a tenant token in the `x-nsc-ingress-auth` header, so you can open them in your browser.
 
